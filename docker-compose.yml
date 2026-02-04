@@ -1,0 +1,18 @@
+services:
+  passivbot-live:
+    profiles:
+      - live
+    build:
+      context: .
+      dockerfile: Dockerfile_live
+    image: passivbot-live:latest
+    restart: unless-stopped
+    volumes:
+      - ./configs/:/app/configs/
+      - ./api-keys.json:/app/api-keys.json
+    working_dir: /app
+    environment:
+      - BITGET_API_KEY=${BITGET_API_KEY}
+      - BITGET_API_SECRET=${BITGET_API_SECRET}
+      - BITGET_PASSPHRASE=${BITGET_PASSPHRASE}
+    command: python3 src/passivbot_multi.py configs/live/multi.hjson
