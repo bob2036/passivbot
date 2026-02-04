@@ -1,25 +1,35 @@
-# Étape 1: Builder Rust (GARDER cette partie)
+# Étape 1: Builder Rust
 FROM rust:1.76-bookworm AS builder
-WORKDIR /app
-COPY . .
-RUN cargo build --release --manifest-path=passivbot-rust/Cargo.toml
 
-# Étape 2: Image finale avec Python ET Rust binaries
+WORKDIR /app
+
+# Copier tout le code
+COPY . .
+
+# Compiler les extensions Rust
+RUN cd passivbot-rust && cargo build --release
+
+# Étape 2: Image finale Python avec les binaires Rust
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copier le binaire Rust compilé
-COPY --from=builder /app/target/release/passivbot /app/passivbot
-
 # Installer les dépendances système
-RUN apt-get update && apt-get install -y gcc g++ && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    curl \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copier TOUT le code source Python
+# Copier tout le code source
 COPY . .
 
-# Installer les dépendances Python
-RUN pip install --no-cache-dir -r requirements.txt
+# Copier les binaires Rust compilés
+COPY --from=builder /app/passivbot-rust/target/release /app/passivbot-rust/target/release
 
-# Le CMD est dans docker-compose.yml
+# Installer les dépendances Python pour live trading
+RUN pip install --no-cache-dir -r requirements-live.txt
+
+# Le CMD est défini dans docker-compose.yml
 CMD ["python3", "src/passivbot_multi.py", "configs/live/multi.hjson"]
