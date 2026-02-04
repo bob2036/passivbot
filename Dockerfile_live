@@ -14,13 +14,30 @@ RUN apt-get update && apt-get install -y \
 # Ajouter Rust au PATH
 ENV PATH="/root/.cargo/bin:${PATH}"
 
+# DEBUG 1: Vérifier le contexte de build
+RUN echo "===== DEBUG 1: Avant COPY ====="
+RUN ls -la /
+
 # Copier tout le code source
 COPY . .
 
-# Installer dépendances Python pour live trading
+# DEBUG 2: Vérifier après COPY
+RUN echo "===== DEBUG 2: Après COPY . . ====="
+RUN pwd
+RUN ls -la /app
+RUN echo "===== Contenu src/ ====="
+RUN ls -la /app/src/ || echo "ERREUR: /app/src/ n'existe pas !"
+RUN echo "===== Vérification fichier spécifique ====="
+RUN test -f /app/src/passivbot_multi.py && echo "✅ passivbot_multi.py TROUVÉ" || echo "❌ passivbot_multi.py MANQUANT"
+
+# Installer dépendances Python
 RUN pip install --no-cache-dir -r requirements-live.txt
 
 # Compiler Rust
 RUN cd passivbot-rust && cargo build --release
+
+# DEBUG 3: Vérification finale
+RUN echo "===== DEBUG 3: Avant CMD ====="
+RUN ls -la /app/src/
 
 CMD ["python3", "src/passivbot_multi.py", "configs/live/multi.hjson"]
