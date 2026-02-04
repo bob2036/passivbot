@@ -17,7 +17,7 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 # Copier tout le code source
 COPY . .
 
-# Installer dépendances Python
+# Installer dépendances Python pour live trading
 RUN pip install --no-cache-dir -r requirements-live.txt
 
 # Compiler Rust
