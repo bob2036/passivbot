@@ -16,3 +16,15 @@ services:
       - BITGET_API_SECRET=${BITGET_API_SECRET}
       - BITGET_PASSPHRASE=${BITGET_PASSPHRASE}
     command: python3 src/passivbot_multi.py configs/live/multi.hjson
+
+  passivbot:
+    profiles:
+      - default
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: passivbot:latest
+    restart: unless-stopped
+    volumes:
+      - ./:/app/
+    working_dir: /app
