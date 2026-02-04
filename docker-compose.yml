@@ -29,5 +29,5 @@ services:
       - ./configs/:/app/configs/
       - ./api-keys.json:/app/api-keys.json
     working_dir: /app
-    # command: python src/main.py configs/template.json
+     command: python src/main.py configs/template.json
     
