@@ -1,6 +1,6 @@
 services:
   passivbot-live:
-    profiles:
+    # profiles:
       # - live
     build:
       context: .
