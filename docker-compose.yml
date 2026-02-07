@@ -1,7 +1,7 @@
 services:
   passivbot-live:
     profiles:
-      - live
+      # - live
     build:
       context: .
       dockerfile: Dockerfile_live
