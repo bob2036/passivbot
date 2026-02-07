@@ -8,27 +8,49 @@ RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     build-essential \
+    tree \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Ajouter Rust au PATH
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# DEBUG 1: Vérifier le contexte de build
-RUN echo "===== DEBUG 1: Avant COPY ====="
-RUN ls -la /
-
 # Copier tout le code source
 COPY . .
 
-# DEBUG 2: Vérifier après COPY
-RUN echo "===== DEBUG 2: Après COPY . . ====="
-RUN pwd
-RUN ls -la /app
-RUN echo "===== Contenu src/ ====="
-RUN ls -la /app/src/ || echo "ERREUR: /app/src/ n'existe pas !"
-RUN echo "===== Vérification fichier spécifique ====="
-RUN test -f /app/src/passivbot_multi.py && echo "✅ passivbot_multi.py TROUVÉ" || echo "❌ passivbot_multi.py MANQUANT"
+# MEGA DEBUG - Afficher TOUT
+RUN echo "========================================" && \
+    echo "DIAGNOSTIC COMPLET DU FILESYSTEM" && \
+    echo "========================================" && \
+    echo "" && \
+    echo "1. PWD:" && \
+    pwd && \
+    echo "" && \
+    echo "2. Contenu de /app (ls -la):" && \
+    ls -la /app && \
+    echo "" && \
+    echo "3. Arborescence complète de /app (tree -L 2):" && \
+    tree -L 2 /app || echo "tree non disponible, utilisation de find:" && \
+    find /app -maxdepth 2 -type d && \
+    echo "" && \
+    echo "4. Tous les fichiers .py dans /app:" && \
+    find /app -name "*.py" | head -30 && \
+    echo "" && \
+    echo "5. Contenu du dossier /app/src (si existe):" && \
+    ls -la /app/src/ 2>&1 && \
+    echo "" && \
+    echo "6. Recherche de passivbot_multi.py:" && \
+    find /app -name "passivbot_multi.py" && \
+    echo "" && \
+    echo "7. Vérification requirements-live.txt:" && \
+    test -f /app/requirements-live.txt && echo "✅ requirements-live.txt TROUVÉ" || echo "❌ requirements-live.txt MANQUANT" && \
+    echo "" && \
+    echo "8. Contenu de .dockerignore (si copié):" && \
+    cat /app/.dockerignore 2>&1 || echo "Pas de .dockerignore copié" && \
+    echo "" && \
+    echo "========================================" && \
+    echo "FIN DU DIAGNOSTIC" && \
+    echo "========================================"
 
 # Installer dépendances Python
 RUN pip install --no-cache-dir -r requirements-live.txt
@@ -36,8 +58,5 @@ RUN pip install --no-cache-dir -r requirements-live.txt
 # Compiler Rust
 RUN cd passivbot-rust && cargo build --release
 
-# DEBUG 3: Vérification finale
-RUN echo "===== DEBUG 3: Avant CMD ====="
-RUN ls -la /app/src/
-
-CMD ["python3", "src/passivbot_multi.py", "configs/live/multi.hjson"]
+# Au démarrage, afficher encore une fois le diagnostic
+CMD ["sh", "-c", "echo '=== DIAGNOSTIC AU DÉMARRAGE ===' && pwd && ls -la /app && ls -la /app/src && python3 src/passivbot_multi.py configs/live/multi.hjson"]
