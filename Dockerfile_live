@@ -8,7 +8,6 @@ RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     build-essential \
-    tree \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
     && rm -rf /var/lib/apt/lists/*
 
@@ -18,48 +17,11 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 # Copier tout le code source
 COPY . .
 
-# ========================================
-# DIAGNOSTIC IMMÉDIAT APRÈS COPY
-# ========================================
-RUN echo "========================================" && \
-    echo "DIAGNOSTIC BUILD - JUSTE APRÈS COPY" && \
-    echo "========================================" && \
-    echo "" && \
-    echo "PWD:" && pwd && \
-    echo "" && \
-    echo "Contenu COMPLET de /app:" && \
-    ls -laR /app | head -200 && \
-    echo "" && \
-    echo "Test direct: est-ce que /app/src existe?" && \
-    test -d /app/src && echo "OUI - /app/src EXISTE" || echo "NON - /app/src N'EXISTE PAS" && \
-    echo "" && \
-    echo "Test direct: est-ce que /app/src/passivbot_multi.py existe?" && \
-    test -f /app/src/passivbot_multi.py && echo "OUI - passivbot_multi.py EXISTE" || echo "NON - passivbot_multi.py N'EXISTE PAS" && \
-    echo "" && \
-    echo "Tous les dossiers dans /app:" && \
-    find /app -maxdepth 1 -type d && \
-    echo "" && \
-    echo "Tous les fichiers .py dans /app:" && \
-    find /app -name "*.py" | head -50 && \
-    echo "" && \
-    echo "Contenu de .dockerignore (si présent):" && \
-    cat /app/.dockerignore || echo "Pas de .dockerignore" && \
-    echo "" && \
-    echo "========================================"
-
 # Installer dépendances Python
 RUN pip install --no-cache-dir -r requirements-live.txt
 
 # Compiler Rust
 RUN cd passivbot-rust && cargo build --release
 
-# Diagnostic final avant CMD
-RUN echo "========================================" && \
-    echo "DIAGNOSTIC BUILD - AVANT CMD" && \
-    echo "========================================" && \
-    test -d /app/src && echo "✅ /app/src EXISTE" || echo "❌ /app/src N'EXISTE PAS" && \
-    test -f /app/src/passivbot_multi.py && echo "✅ passivbot_multi.py EXISTE" || echo "❌ passivbot_multi.py N'EXISTE PAS" && \
-    echo "========================================"
-
-# CMD avec diagnostic runtime
-CMD ["/bin/bash", "-c", "echo '=== RUNTIME DIAGNOSTIC ===' && pwd && echo 'Contenu /app:' && ls -la /app && echo 'Contenu /app/src:' && ls -la /app/src 2>&1 && echo 'Recherche passivbot_multi.py:' && find /app -name 'passivbot_multi.py' 2>&1 && echo '=== LANCEMENT ===' && python3 src/passivbot_multi.py configs/live/multi.hjson"]
+# Utiliser main.py au lieu de passivbot_multi.py
+CMD ["python3", "src/main.py", "configs/live/multi.hjson"]
