@@ -18,39 +18,15 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 # Copier tout le code source
 COPY . .
 
-# MEGA DEBUG - Afficher TOUT
-RUN echo "========================================" && \
-    echo "DIAGNOSTIC COMPLET DU FILESYSTEM" && \
-    echo "========================================" && \
-    echo "" && \
-    echo "1. PWD:" && \
+# MEGA DEBUG pendant le BUILD
+RUN echo "======================================== BUILD TIME DIAGNOSTIC" && \
     pwd && \
-    echo "" && \
-    echo "2. Contenu de /app (ls -la):" && \
     ls -la /app && \
-    echo "" && \
-    echo "3. Arborescence complète de /app (tree -L 2):" && \
-    tree -L 2 /app || echo "tree non disponible, utilisation de find:" && \
-    find /app -maxdepth 2 -type d && \
-    echo "" && \
-    echo "4. Tous les fichiers .py dans /app:" && \
-    find /app -name "*.py" | head -30 && \
-    echo "" && \
-    echo "5. Contenu du dossier /app/src (si existe):" && \
-    ls -la /app/src/ 2>&1 && \
-    echo "" && \
-    echo "6. Recherche de passivbot_multi.py:" && \
+    echo "--- Contenu de /app/src ---" && \
+    ls -la /app/src/ && \
+    echo "--- Recherche passivbot_multi.py ---" && \
     find /app -name "passivbot_multi.py" && \
-    echo "" && \
-    echo "7. Vérification requirements-live.txt:" && \
-    test -f /app/requirements-live.txt && echo "✅ requirements-live.txt TROUVÉ" || echo "❌ requirements-live.txt MANQUANT" && \
-    echo "" && \
-    echo "8. Contenu de .dockerignore (si copié):" && \
-    cat /app/.dockerignore 2>&1 || echo "Pas de .dockerignore copié" && \
-    echo "" && \
-    echo "========================================" && \
-    echo "FIN DU DIAGNOSTIC" && \
-    echo "========================================"
+    echo "======================================== FIN BUILD DIAGNOSTIC"
 
 # Installer dépendances Python
 RUN pip install --no-cache-dir -r requirements-live.txt
@@ -58,5 +34,5 @@ RUN pip install --no-cache-dir -r requirements-live.txt
 # Compiler Rust
 RUN cd passivbot-rust && cargo build --release
 
-# Au démarrage, afficher encore une fois le diagnostic
-CMD ["sh", "-c", "echo '=== DIAGNOSTIC AU DÉMARRAGE ===' && pwd && ls -la /app && ls -la /app/src && python3 src/passivbot_multi.py configs/live/multi.hjson"]
+# CMD simple pour diagnostic
+CMD ["/bin/bash", "-c", "echo '=== RUNTIME DIAGNOSTIC ===' && pwd && echo '--- ls /app ---' && ls -la /app && echo '--- ls /app/src ---' && ls -la /app/src 2>&1 && echo '--- find passivbot_multi.py ---' && find /app -name 'passivbot_multi.py' 2>&1 && echo '=== END DIAGNOSTIC ===' && sleep 3600"]
